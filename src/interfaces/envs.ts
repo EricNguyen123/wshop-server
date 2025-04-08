@@ -1,0 +1,30 @@
+export interface EnvConfig {
+  APP_NAME: string;
+  APP_URL: string;
+  FE_URL: string;
+  MYSQL_PORT: number;
+  MYSQL_USERNAME: string;
+  MYSQL_DB_NAME: string;
+  MYSQL_PASSWORD: string;
+  MYSQL_HOST: string;
+  JWT_SECRET: string;
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
+  GOOGLE_CALLBACK_URL: string;
+  REDIS_HOST: string;
+  REDIS_PORT: number;
+  MAIL_ENCRYPTION: string;
+  MAIL_FROM_ADDRESS: string;
+  MAIL_HOST: string;
+  MAIL_MAILER: string;
+  MAIL_PASSWORD: string;
+  MAIL_PORT: number;
+  MAIL_USERNAME: string;
+  BCRYPT_SALT_ROUND: number;
+  PORT: number;
+  DEFAULT_PORT: number;
+  OTP_SIZE: number;
+  OTP_TIMEOUT: number;
+  OTP_TIME_LIMIT: number;
+  OTP_LIMIT: number;
+}
