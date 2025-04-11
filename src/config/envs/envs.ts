@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import * as Joi from 'joi';
-import { EnvConfig } from 'src/interfaces/envs';
+import { EnvConfig } from 'src/interfaces/envs.interface';
 
 const envVarsSchema = Joi.object({
   APP_NAME: Joi.string().required(),

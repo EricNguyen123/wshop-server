@@ -8,6 +8,12 @@ export class ProductTypeResourcesEntity extends BaseModel {
   @Column({ name: 'quantity', type: 'int', unsigned: true })
   quantity: number;
 
+  @Column({ name: 'product_type_id', type: 'uuid' })
+  productTypeId: string;
+
+  @Column({ name: 'product_resource_id', type: 'uuid' })
+  productResourceId: string;
+
   @ManyToOne(() => ProductTypesEntity, (productType) => productType.productTypeResources, {
     onDelete: 'CASCADE',
   })

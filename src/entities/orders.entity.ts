@@ -38,12 +38,26 @@ export class OrdersEntity extends BaseModel {
   @Column({ name: 'order_type', type: 'smallint' })
   orderType: number;
 
+  @Column({ name: 'bill_id', type: 'uuid' })
+  billId: string;
+
+  @Column({ name: 'user_id', type: 'uuid' })
+  userId: string;
+
+  @Column({ name: 'orderer_id', type: 'uuid' })
+  ordererId: string;
+
+  @Column({ name: 'receiver_id', type: 'uuid' })
+  receiverId: string;
+
   @ManyToOne(() => BillsEntity, (bill) => bill.orders, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'bill_id' })
   bill: BillsEntity;
 
   @ManyToOne(() => UserEntity, (user) => user.orders)
+  @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
   @ManyToOne(() => UserEntity, (orderer) => orderer.ordersOrderer, {

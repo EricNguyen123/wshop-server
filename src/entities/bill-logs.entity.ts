@@ -7,6 +7,9 @@ export class BillLogsEntity extends BaseModel {
   @Column({ name: 'content', type: 'text' })
   content: string;
 
+  @Column({ name: 'bill_id', type: 'uuid' })
+  billId: string;
+
   @ManyToOne(() => BillsEntity, (bill) => bill.billLogs, {
     onDelete: 'CASCADE',
   })

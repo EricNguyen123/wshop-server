@@ -17,6 +17,12 @@ export class BillItemsEntity extends BaseModel {
   @Column({ name: 'order_at', type: 'datetime' })
   orderAt: Date;
 
+  @Column({ name: 'bill_group_id', type: 'uuid' })
+  billGroupId: string;
+
+  @Column({ name: 'product_type_id', type: 'uuid' })
+  productTypeId: string;
+
   @ManyToOne(() => BillGroupsEntity, (billGroup) => billGroup.billItems, {
     onDelete: 'CASCADE',
   })

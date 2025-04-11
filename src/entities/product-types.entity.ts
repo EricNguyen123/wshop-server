@@ -12,6 +12,15 @@ export class ProductTypesEntity extends BaseModel {
   @Column({ name: 'quantity', type: 'int', unsigned: true })
   quantity: number;
 
+  @Column({ name: 'product_id', type: 'uuid' })
+  productId: string;
+
+  @Column({ name: 'color_type_id', type: 'uuid' })
+  colorTypeId: string;
+
+  @Column({ name: 'size_type_id', type: 'uuid' })
+  sizeTypeId: string;
+
   @ManyToOne(() => ProductsEntity, (product) => product.productTypes, {
     onDelete: 'CASCADE',
   })

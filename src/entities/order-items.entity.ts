@@ -17,10 +17,16 @@ export class OrderItemsEntity extends BaseModel {
   shippingDate: Date;
 
   @Column({ name: 'order_type', type: 'smallint' })
-  order_type: number;
+  orderType: number;
 
   @Column({ name: 'quantity', type: 'int', unsigned: true })
   quantity: number;
+
+  @Column({ name: 'order_id', type: 'uuid' })
+  orderId: string;
+
+  @Column({ name: 'cart_item_id', type: 'uuid' })
+  cartItemId: string;
 
   @ManyToOne(() => OrdersEntity, (order) => order.orderItems, {
     onDelete: 'CASCADE',

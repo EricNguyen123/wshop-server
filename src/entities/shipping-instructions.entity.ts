@@ -25,6 +25,9 @@ export class ShippingInstructionsEntity extends BaseModel {
   @Column({ name: 'memo', type: 'text' })
   memo: string;
 
+  @Column({ name: 'order_item_id', type: 'uuid' })
+  orderItemId: string;
+
   @ManyToOne(() => OrderItemsEntity, (orderItem) => orderItem.shippingInstructions, {
     onDelete: 'CASCADE',
   })

@@ -6,7 +6,13 @@ import { BaseModel } from './base-model';
 @Entity('store_prefectures')
 export class StorePrefecturesEntity extends BaseModel {
   @Column({ type: 'int' })
-  shipping_fee: number;
+  shippingFee: number;
+
+  @Column({ name: 'prefecture_id', type: 'uuid' })
+  prefectureId: string;
+
+  @Column({ name: 'store_id', type: 'uuid' })
+  storeId: string;
 
   @ManyToOne(() => PrefecturesEntity, (prefecture) => prefecture.storePrefectures, {
     onDelete: 'CASCADE',

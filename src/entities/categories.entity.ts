@@ -7,6 +7,9 @@ export class CategoriesEntity extends BaseModel {
   @Column({ name: 'name', type: 'varchar', length: 255 })
   name: string;
 
+  @Column({ name: 'parent_category_id', type: 'uuid', nullable: true })
+  parentCategoryId: string;
+
   @ManyToOne(() => CategoriesEntity, (category) => category.subCategories, {
     nullable: true,
     onDelete: 'CASCADE',

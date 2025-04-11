@@ -20,6 +20,9 @@ export class PrefecturesEntity extends BaseModel {
   @Column({ name: 'label', type: 'varchar', length: 255 })
   label: string;
 
+  @Column({ name: 'shipping_setting_id', type: 'uuid' })
+  shippingSettingId: string;
+
   @ManyToOne(() => ShippingSettingsEntity, (shippingSetting) => shippingSetting.prefectures, {
     onDelete: 'CASCADE',
   })

@@ -11,6 +11,12 @@ export class ActiveStorageAttachmentsEntity extends BaseModel {
   @Column({ name: 'record_type', type: 'varchar' })
   recordType: string;
 
+  @Column({ name: 'blob_id', type: 'uuid' })
+  blobId: string;
+
+  @Column({ name: 'record_id', type: 'uuid' })
+  recordId: string;
+
   @ManyToOne(
     () => ActiveStorageBlobsEntity,
     (activeStorageBlob) => activeStorageBlob.activeStorageAttachments

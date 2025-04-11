@@ -20,6 +20,21 @@ export class CartItemsEntity extends BaseModel {
   })
   status: CartStatusEnum;
 
+  @Column({ name: 'campaign_id', type: 'uuid' })
+  campaignId: string;
+
+  @Column({ name: 'product_id', type: 'uuid' })
+  productId: string;
+
+  @Column({ name: 'store_id', type: 'uuid' })
+  storeId: string;
+
+  @Column({ name: 'product_type_id', type: 'uuid' })
+  productTypeId: string;
+
+  @Column({ name: 'user_id', type: 'uuid' })
+  userId: string;
+
   @ManyToOne(() => CampaignsEntity, (campaign) => campaign.cartItems, {
     onDelete: 'CASCADE',
   })

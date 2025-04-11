@@ -11,6 +11,12 @@ export class CampaignProductsEntity extends BaseModel {
   @Column({ name: 'product_type', type: 'int' })
   productType: number;
 
+  @Column({ name: 'campaign_id', type: 'uuid' })
+  campaignId: string;
+
+  @Column({ name: 'product_id', type: 'uuid' })
+  productId: string;
+
   @ManyToOne(() => CampaignsEntity, (campaign) => campaign.campaignProducts, {
     onDelete: 'CASCADE',
   })

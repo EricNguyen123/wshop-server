@@ -33,6 +33,12 @@ export class BillGroupsEntity extends BaseModel {
   @Column({ name: 'order_type', type: 'int' })
   orderType: number;
 
+  @Column({ name: 'bill_id', type: 'uuid' })
+  billId: string;
+
+  @Column({ name: 'store_id', type: 'uuid' })
+  storeId: string;
+
   @ManyToOne(() => BillsEntity, (bill) => bill.billGroups, {
     onDelete: 'CASCADE',
   })

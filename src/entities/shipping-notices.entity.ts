@@ -17,6 +17,12 @@ export class ShippingNoticesEntity extends BaseModel {
   @Column({ name: 'memo', type: 'text' })
   memo: string;
 
+  @Column({ name: 'shipping_company_id', type: 'uuid' })
+  shippingCompanyId: string;
+
+  @Column({ name: 'order_item_id', type: 'uuid' })
+  orderItemId: string;
+
   @ManyToOne(() => ShippingCompaniesEntity, (shippingCompany) => shippingCompany.shippingNotices, {
     onDelete: 'CASCADE',
   })

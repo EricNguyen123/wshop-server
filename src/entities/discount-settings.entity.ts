@@ -7,6 +7,9 @@ export class DiscountSettingsEntity extends BaseModel {
   @Column({ name: 'custom_discount_type', type: 'int' })
   customDiscountValue: number;
 
+  @Column({ name: 'product_id', type: 'uuid' })
+  productId: string;
+
   @ManyToOne(() => ProductsEntity, (product) => product.discountSettings, {
     onDelete: 'CASCADE',
   })

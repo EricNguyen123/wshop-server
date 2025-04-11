@@ -6,14 +6,14 @@ import { SizeTypesEnum } from 'src/common/enums/common.enum';
 @Entity('size_types')
 export class SizeTypesEntity extends BaseModel {
   @Column({ name: 'size_code', type: 'varchar', length: 255 })
-  size_code: string;
+  sizeCode: string;
 
   @Column({
     name: 'size_type',
     type: 'varchar',
     default: SizeTypesEnum.MALE,
   })
-  size_type: SizeTypesEnum;
+  sizeType: SizeTypesEnum;
 
   @OneToMany(() => ProductTypesEntity, (productTypes) => productTypes.sizeType, {
     cascade: true,
