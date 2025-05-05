@@ -31,6 +31,8 @@ const envVarsSchema = Joi.object({
   OTP_TIMEOUT: Joi.number().required(),
   OTP_TIME_LIMIT: Joi.number().required(),
   OTP_LIMIT: Joi.number().required(),
+  JWT_EXPIRES_IN: Joi.string().required(),
+  JWT_REFRESH_EXPIRES_IN: Joi.string().required(),
 }).unknown(true);
 
 const result = envVarsSchema.validate(process.env) as {
@@ -73,4 +75,6 @@ export const envs = {
   otpTimeout: envVars.OTP_TIMEOUT,
   otpTimeLimit: envVars.OTP_TIME_LIMIT,
   otpLimit: envVars.OTP_LIMIT,
+  jwtExpiresIn: envVars.JWT_EXPIRES_IN,
+  jwtRefreshExpiresIn: envVars.JWT_REFRESH_EXPIRES_IN,
 };

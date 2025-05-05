@@ -4,15 +4,15 @@ import { ApiProperty } from '@nestjs/swagger';
 import { StatusEnum, ValidRolesEnum } from 'src/common/enums/base.enum';
 import { IsEmail } from 'class-validator';
 
-export class DUserUpdate extends PartialType(
+export class DUserCreate extends PartialType(
   OmitType(DUser, ['encryptedPassword', 'tokens'] as const)
 ) {
   @ApiProperty({ example: 'John' })
-  name?: string;
+  name: string;
 
   @ApiProperty({ example: 'jane@gmail.com' })
   @IsEmail()
-  email?: string;
+  email: string;
 
   @ApiProperty({ example: ValidRolesEnum.ADMIN })
   role?: ValidRolesEnum;

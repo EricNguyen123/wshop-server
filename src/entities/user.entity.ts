@@ -45,7 +45,7 @@ export class UserEntity extends BaseModel {
   @Column({ name: 'encrypted_password', type: 'varchar' })
   encryptedPassword: string;
 
-  @Column({ name: 'status', type: 'varchar', default: StatusEnum.NOT_ACTIVE })
+  @Column({ name: 'status', type: 'smallint', default: StatusEnum.NOT_ACTIVE })
   status: StatusEnum;
 
   @Column({ name: 'current_sign_in_at', type: 'datetime', default: null, nullable: true })

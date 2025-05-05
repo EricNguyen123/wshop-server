@@ -74,6 +74,10 @@ export const HTTP_RESPONSE = {
       message: 'Update user fail',
       code: 2003,
     },
+    CONFLICT: {
+      message: 'Conflict user',
+      code: 2004,
+    },
   },
 
   AUTH: {
@@ -136,6 +140,26 @@ export const HTTP_RESPONSE = {
     REQUIRE_PASSWORD: {
       message: 'Please Provide The Password',
       code: 3014,
+    },
+    TOKEN_NOT_FOUND: {
+      message: 'Token not found',
+      code: 3015,
+    },
+    REGISTER_ERROR: {
+      message: 'Register error',
+      code: 3016,
+    },
+    AUTH_HEADER_MISSING: {
+      message: 'Authorization header missing',
+      code: 3017,
+    },
+    TOKEN_IS_MISSING: {
+      message: 'Token is missing',
+      code: 3018,
+    },
+    TOKEN_EXPIRED: {
+      message: 'Token expired',
+      code: 3019,
     },
   },
 

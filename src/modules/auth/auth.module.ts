@@ -13,6 +13,8 @@ import { MailerService } from '../mailer/mailer.service';
 import { MailerModule } from '../mailer/mailer.module';
 import { UsersModule } from '../users/users.module';
 import { UsersService } from '../users/users.service';
+import { RefreshJwtStrategy } from './strategies/refresh-token.strategy';
+import { parseExpiresIn } from 'src/utils/jwt.util';
 
 @Module({
   imports: [
@@ -21,7 +23,7 @@ import { UsersService } from '../users/users.service';
     JwtModule.registerAsync({
       useFactory: () => ({
         secret: envs.jwtSecret,
-        signOptions: { expiresIn: '1h' },
+        signOptions: { expiresIn: parseExpiresIn(envs.jwtExpiresIn) },
       }),
     }),
     ConfigModule.forFeature(googleOauthConfig),
@@ -29,7 +31,15 @@ import { UsersService } from '../users/users.service';
     MailerModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, UsersService, JwtStrategy, LocalStrategy, GoogleStrategy, MailerService],
+  providers: [
+    AuthService,
+    UsersService,
+    JwtStrategy,
+    LocalStrategy,
+    GoogleStrategy,
+    MailerService,
+    RefreshJwtStrategy,
+  ],
   exports: [JwtStrategy, PassportModule, JwtModule, AuthService],
 })
 export class AuthModule {}

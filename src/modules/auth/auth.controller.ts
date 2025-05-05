@@ -3,7 +3,9 @@ import {
   ClassSerializerInterceptor,
   Controller,
   Get,
+  HttpException,
   HttpStatus,
+  Logger,
   Param,
   Post,
   Put,
@@ -16,7 +18,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
-import { ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { DRegister } from 'src/dto/auth/register.dto';
 import { LocalAuthGuard } from './guards/local-guards/local-auth.guard';
 import { DLogin } from 'src/dto/auth/login.dto';
@@ -50,12 +52,19 @@ import { DOtpEmail } from 'src/dto/auth/otp-email.dto';
 import { DVerifyOtpRes } from 'src/dto/auth/verify-otp-res.dto';
 import { DVerifyOtp } from 'src/dto/auth/verify-otp';
 import { DChangeForgotPassword } from 'src/dto/auth/change-forgot-password.dto';
-import { DOtpEmailRes } from 'src/dto/auth/otp-email-res.dto';
 import { DChangePassword } from 'src/dto/auth/change-password.dto';
+import { ILoginReq, IRefreshReq } from 'src/interfaces/auth.interface';
+import { DOtpEmailResSuccess } from 'src/dto/auth/otp-email-success.dto';
+import { DRefreshToken } from 'src/dto/auth/refresh-token.dto';
+import { RefreshJwtGuard } from './guards/jwt-guards/refresh-jwt-auth.guard';
+import { DRefreshTokenRes } from 'src/dto/auth/refresh-token-res.dto';
+import { DVerifyOtpRestoreRes } from 'src/dto/auth/verify-otp-restore-res.dto';
+import { DQueryOtpEmail } from 'src/dto/auth/otp-email-query.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+  private readonly logger = new Logger(AuthController.name, { timestamp: true });
 
   @ApiResponse({
     status: 201,
@@ -74,6 +83,7 @@ export class AuthController {
     };
   }
 
+  @ApiBody({ type: DLogin })
   @ApiResponse({
     status: 200,
     description: 'User successfully login',
@@ -82,9 +92,13 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
   @Post('login')
-  async login(@Body() data: DLogin): Promise<DLoginResSuccess> {
-    const result = await this.authService.login({ data });
+  async login(@Req() req: ILoginReq): Promise<DLoginResSuccess> {
+    const label = '[login]';
+
+    const result = await this.authService.login({ id: req.user.id });
     result.user = instanceToPlain(new UserSerializer(result.user));
+    this.logger.debug(`${label} result -> ${JSON.stringify(result)}`);
+
     return {
       status: HttpStatus.OK,
       message: HTTP_RESPONSE.AUTH.LOGIN_SUCCESS.message,
@@ -139,6 +153,7 @@ export class AuthController {
     return await this.authService.logout({ token });
   }
 
+  @ApiBearerAuth('access-token')
   @ApiResponse({
     status: 200,
     description: 'User successfully change password',
@@ -147,13 +162,13 @@ export class AuthController {
   @Roles(ValidRolesEnum.ADMIN, ValidRolesEnum.EDITOR, ValidRolesEnum.USER)
   @UseGuards(RolesGuard)
   @UseGuards(JwtAuthGuard)
-  @UsePipes(new ZodValidationPipe(changePasswordSchema))
-  @Put('update/:userId/password')
+  @Put(':userId/password')
   updatePassword(
-    @Body() data: DChangePassword,
+    @Body(new ZodValidationPipe(changePasswordSchema)) data: DChangePassword,
     @Param() params: DParamsUser
   ): Promise<DChangePasswordRes> {
     const { userId: id } = params;
+    this.logger.debug(`[updatePassword] id -> ${id}`);
     return this.authService.changePassword({ data, id });
   }
 
@@ -172,7 +187,7 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'Req OTP successfully',
-    type: DOtpEmailRes,
+    type: DOtpEmailResSuccess,
   })
   @Post('otp')
   reqOTPtoEmail(@Body() data: DOtpEmail) {
@@ -185,9 +200,9 @@ export class AuthController {
     type: DVerifyOtpRes,
   })
   @Post('otp/verify')
-  verifyOTP(@Body() data: DVerifyOtp) {
+  verifyOTP(@Body() data: DVerifyOtp, @Query() query: DQueryOtpEmail) {
     const { otp, email } = data;
-    return this.authService.verifyOTP({ otp, email });
+    return this.authService.verifyOTP({ otp, email, query });
   }
 
   @ApiResponse({
@@ -195,9 +210,49 @@ export class AuthController {
     description: 'User successfully change password',
     type: DChangePasswordRes,
   })
-  @Post('update/:userId/forgot_password')
+  @Put(':userId/forgot_password')
   updateForgotPassword(@Body() data: DChangeForgotPassword, @Param() params: DParamsUser) {
     const { userId: id } = params;
     return this.authService.changeForgotPassword({ data, id });
+  }
+
+  @ApiResponse({
+    status: 201,
+    description: 'Refresh token successfully',
+    type: DRefreshTokenRes,
+  })
+  @UseGuards(RefreshJwtGuard)
+  @Post('refresh')
+  refreshToken(@Req() req: IRefreshReq, @Body() data: DRefreshToken) {
+    const userId = req.user.id;
+    const { refresh } = data;
+    return this.authService.refreshToken({ userId, refresh });
+  }
+
+  @ApiResponse({
+    status: 201,
+    description: 'verify OTP restore user successfully',
+    type: DVerifyOtpRestoreRes,
+  })
+  @Post('otp/verify-restore')
+  async verifyOTPRestoreUser(@Body() data: DVerifyOtp, @Query() query: DQueryOtpEmail) {
+    const { otp, email } = data;
+    const verify = await this.authService.verifyOTP({ otp, email, query });
+    if (!verify.data.userId) {
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          message: HTTP_RESPONSE.AUTH.VERIFY_OTP_FAIL.message,
+          code: HTTP_RESPONSE.AUTH.VERIFY_OTP_FAIL.code,
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+    await this.authService.createUser({ user: { email } });
+    return {
+      status: HttpStatus.OK,
+      message: HTTP_RESPONSE.AUTH.VERIFY_OTP_SUCCESS.message,
+      code: HTTP_RESPONSE.AUTH.VERIFY_OTP_SUCCESS.code,
+    };
   }
 }

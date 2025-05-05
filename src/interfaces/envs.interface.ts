@@ -27,4 +27,6 @@ export interface EnvConfig {
   OTP_TIMEOUT: number;
   OTP_TIME_LIMIT: number;
   OTP_LIMIT: number;
+  JWT_EXPIRES_IN: string;
+  JWT_REFRESH_EXPIRES_IN: string;
 }

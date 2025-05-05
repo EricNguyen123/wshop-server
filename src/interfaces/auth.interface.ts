@@ -24,6 +24,11 @@ export interface ILogin {
 export interface ILoginRes {
   user: IUserRes;
   token: string;
+  refreshToken: string;
+}
+
+export interface ILoginReq {
+  user: IUserRes;
 }
 
 export type ILogoutRes = Omit<IResponse, 'data'>;
@@ -49,3 +54,11 @@ export interface IVerifyEmail {
 }
 
 export type ICheckUser = ILogin;
+
+export interface IRefreshReq {
+  user: IUserRes;
+}
+
+export interface IRefreshRes {
+  token: string;
+}

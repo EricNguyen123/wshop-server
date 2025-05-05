@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { AuthService } from '../auth.service';
@@ -9,8 +9,10 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(private authService: AuthService) {
     super({ usernameField: 'email' });
   }
+  private readonly logger = new Logger(LocalStrategy.name, { timestamp: true });
 
   async validate(email: string, password: string) {
+    const label = '[validate]';
     if (password === '')
       throw new UnauthorizedException({
         status: HttpStatus.UNAUTHORIZED,
@@ -19,13 +21,8 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       });
     const data = { email, password };
     const user = await this.authService.validateCheckUser({ data });
-    if (!user) {
-      throw new UnauthorizedException({
-        status: HttpStatus.UNAUTHORIZED,
-        message: HTTP_RESPONSE.COMMON.UNAUTHORIZED.message,
-        code: HTTP_RESPONSE.COMMON.UNAUTHORIZED.code,
-      });
-    }
+    this.logger.debug(`${label} user -> ${JSON.stringify(user)}`);
+
     return user;
   }
 }

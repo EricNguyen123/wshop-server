@@ -31,7 +31,7 @@ export class StoreEntity extends BaseModel {
   @Column({ name: 'building', type: 'varchar', default: null, nullable: true })
   building: string;
 
-  @Column({ name: 'status', type: 'varchar', default: StatusEnum.NOT_ACTIVE })
+  @Column({ name: 'status', type: 'smallint', default: StatusEnum.NOT_ACTIVE })
   status: StatusEnum;
 
   @OneToMany(() => ProductResourceEntity, (productResources) => productResources.product, {

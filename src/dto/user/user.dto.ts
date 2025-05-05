@@ -4,14 +4,14 @@ import { StatusEnum, ValidRolesEnum } from 'src/common/enums/base.enum';
 import { ValidationConfig } from 'src/constants/common';
 
 export class DUser {
-  @ApiProperty()
+  @ApiProperty({ example: 'John' })
   name?: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'jane@gmail.com' })
   @IsEmail()
   email: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: '123456@aA' })
   @ValidateIf((obj: DUser) => obj.encryptedPassword !== undefined)
   @IsStrongPassword({
     minLength: ValidationConfig.LENGTH_STRING,
@@ -22,36 +22,39 @@ export class DUser {
   })
   encryptedPassword?: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: ValidRolesEnum.ADMIN })
   role?: ValidRolesEnum;
 
-  @ApiProperty()
+  @ApiProperty({ example: StatusEnum.ACTIVE })
   status?: StatusEnum;
 
-  @ApiProperty()
+  @ApiProperty({ example: '123456' })
   zipcode?: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: '0987654321' })
   phone?: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'HN' })
   prefecture?: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'HD' })
   city?: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: '112 HD' })
   street?: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'A1 112 QT' })
   building?: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: '2025-04-10 15:34:54.726739' })
   currentSignInAt?: Date;
 
-  @ApiProperty()
+  @ApiProperty({ example: '2025-04-10 15:34:54.726739' })
   lastSignInAt?: Date;
 
-  @ApiProperty()
+  @ApiProperty({
+    example:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6IjAwMDAyIiwiaWF0IjoxNzQ0MjcyMDU0LCJleHAiOjE3NzU4Mjk2NTR9.T3D4worEVyq2_DVU3GtQR2Ig6Fk2q1rkepTq8OSasEk',
+  })
   tokens?: string;
 }

@@ -1,15 +1,24 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { PipeTransform, ArgumentMetadata, BadRequestException, HttpStatus } from '@nestjs/common';
+import {
+  PipeTransform,
+  ArgumentMetadata,
+  BadRequestException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { HTTP_RESPONSE } from 'src/constants/http-response';
 import { ZodError, ZodSchema } from 'zod';
 
 export class ZodValidationPipe implements PipeTransform {
   constructor(private schema: ZodSchema) {}
+  private readonly logger = new Logger(ZodValidationPipe.name, { timestamp: true });
 
   transform(value: unknown, metadata: ArgumentMetadata) {
+    const label = '[transform]';
     try {
+      this.logger.log(`${label} value -> ${JSON.stringify(value)}`);
       const parsedValue = this.schema.parse(value);
       return parsedValue;
     } catch (error) {

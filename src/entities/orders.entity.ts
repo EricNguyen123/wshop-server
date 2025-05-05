@@ -18,7 +18,7 @@ export class OrdersEntity extends BaseModel {
 
   @Column({
     name: 'shipping_status',
-    type: 'varchar',
+    type: 'smallint',
     default: ShippingStatusEnum.WAITING_FOR_PICK_UP,
   })
   shippingStatus: ShippingStatusEnum;

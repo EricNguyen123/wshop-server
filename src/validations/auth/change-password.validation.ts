@@ -4,7 +4,6 @@ import { strongPassword } from '../base.validation';
 
 export const changePasswordSchema = z
   .object({
-    id: z.string().trim().uuid(MESSAGES.ZOD.AUTH.REGISTER.ID.INVALID),
     currentPassword: strongPassword,
     password: strongPassword,
     confirmPassword: z.string().trim(),

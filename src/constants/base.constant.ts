@@ -13,3 +13,12 @@ export const HOST_DEFAULT = 'localhost';
 export const PORT_REDIS_DEFAULT = 6379;
 
 export const SECOND_DEFAULT = 60;
+
+export const DEFAULT_PAGE = 1;
+
+export const DEFAULT_LIMIT = 10;
+
+export const SORT = {
+  ASC: 'ASC',
+  DESC: 'DESC',
+};
