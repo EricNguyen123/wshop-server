@@ -173,4 +173,55 @@ export const HTTP_RESPONSE = {
       code: 4001,
     },
   },
+
+  FILE: {
+    UPLOAD_ERROR: {
+      message: 'Upload file error',
+      code: 5000,
+    },
+    ATTACHMENT_NOT_FOUND: {
+      message: 'Attachment not found',
+      code: 5001,
+    },
+    BLOB_NOT_FOUND: {
+      message: 'Blob not found',
+      code: 5002,
+    },
+    DELETE_ERROR: {
+      message: 'Delete file error',
+      code: 5003,
+    },
+    DELETE_SUCCESS: {
+      message: 'Delete file successfully',
+      code: 5004,
+    },
+    FILE_NOT_FOUND: {
+      message: 'File not found on disk',
+      code: 5005,
+    },
+    FILE_TYPE_ERROR: {
+      message: 'Only image, PDF, Word, Excel, and text files are allowed!',
+      code: 5006,
+    },
+  },
+  MEDIA: {
+    NOT_FOUND: {
+      message: 'Media not found',
+      code: 6000,
+    },
+  },
+  BANNER: {
+    DATE_INVALID: {
+      message: 'Start date must be less than end date',
+      code: 7000,
+    },
+    DATE_EXISTED: {
+      message: 'Banner Day Has Been Lived',
+      code: 7001,
+    },
+    NOT_FOUND: {
+      message: 'Banner not found',
+      code: 7002,
+    },
+  },
 };

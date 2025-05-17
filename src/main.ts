@@ -6,9 +6,11 @@ import { HTTP_RESPONSE } from './constants/http-response';
 import { SwaggerModule } from '@nestjs/swagger';
 import { ForbiddenException, HttpStatus } from '@nestjs/common';
 import { SWAGGER_CONFIG } from './config/swagger/swagger.config';
+import { join } from 'path';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['log', 'fatal', 'error', 'warn', 'debug', 'verbose'],
   });
 
@@ -22,6 +24,9 @@ async function bootstrap(): Promise<void> {
 
   app.enableCors(corsOptions);
   app.setGlobalPrefix('api');
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/api',
+  });
 
   const port: number = envs.port ?? envs.defaultPort;
   await app.listen(port);

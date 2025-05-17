@@ -15,6 +15,8 @@ import { UsersModule } from '../users/users.module';
 import { UsersService } from '../users/users.service';
 import { RefreshJwtStrategy } from './strategies/refresh-token.strategy';
 import { parseExpiresIn } from 'src/utils/jwt.util';
+import { FileModule } from '../file/file.module';
+import { MediaModule } from '../media/media.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { parseExpiresIn } from 'src/utils/jwt.util';
     }),
     ConfigModule.forFeature(googleOauthConfig),
     forwardRef(() => UsersModule),
+    FileModule,
+    MediaModule,
     MailerModule,
   ],
   controllers: [AuthController],

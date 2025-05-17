@@ -31,6 +31,7 @@ export interface IUserRes {
   building?: string;
   currentSignInAt?: Date;
   lastSignInAt?: Date;
+  avatarUrl?: string;
 }
 
 export type IUserUpdate = Partial<IUser>;

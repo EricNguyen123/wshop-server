@@ -10,6 +10,9 @@ import { MailerModule } from './modules/mailer/mailer.module';
 import googleOauthConfig from './config/oauth/google-oauth.config';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { redisOption } from './config/redis/redis.config';
+import { FileModule } from './modules/file/file.module';
+import { MediaModule } from './modules/media/media.module';
+import { BannerModule } from './modules/banner/banner.module';
 
 @Module({
   imports: [
@@ -24,6 +27,9 @@ import { redisOption } from './config/redis/redis.config';
     UsersModule,
     AuthModule,
     MailerModule,
+    FileModule,
+    MediaModule,
+    BannerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

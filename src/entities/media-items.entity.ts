@@ -8,11 +8,11 @@ export class MediaItemsEntity extends BaseModel {
   @Column({ name: 'resource_type', type: 'varchar', length: 255 })
   resourceType: string;
 
-  @Column({ name: 'resource_id', type: 'int' })
-  resourceId: number;
+  @Column({ name: 'resource_id', type: 'uuid' })
+  resourceId: string;
 
-  @Column({ name: 'media_type', type: 'int' })
-  mediaType: number;
+  @Column({ name: 'media_type', type: 'varchar', length: 255 })
+  mediaType: string;
 
   @Column({ name: 'media_url', type: 'varchar', length: 255 })
   @IsUrl()

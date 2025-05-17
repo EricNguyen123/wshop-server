@@ -185,8 +185,10 @@ export class AuthService {
     const updateUser = await this.updateToken({ id, token });
     this.logger.debug(`${label} updateUser -> ${JSON.stringify(updateUser)}`);
 
+    const avatarUrl = await this.usersService.getAvatarUrl({ id: updateUser.id });
+
     return {
-      user: updateUser,
+      user: { ...updateUser, avatarUrl },
       token,
       refreshToken: refresh,
     };
@@ -215,8 +217,10 @@ export class AuthService {
     await this.setBlacklistRefreshToken({ userId: user.id, refresh });
     const updateUser = await this.updateToken({ id: user.id, token });
 
+    const avatarUrl = await this.usersService.getAvatarUrl({ id: updateUser.id });
+
     return {
-      user: updateUser,
+      user: { ...updateUser, avatarUrl },
       token,
       refreshToken: refresh,
     };

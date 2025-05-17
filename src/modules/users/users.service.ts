@@ -9,7 +9,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { HTTP_RESPONSE } from 'src/constants/http-response';
 import { UserEntity } from 'src/entities/user.entity';
-import { ILike, Repository } from 'typeorm';
+import { DataSource, ILike, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { IUser, IUserUpdate } from 'src/interfaces/user.interface';
 import { IResponse } from 'src/interfaces/base.interface';
@@ -17,12 +17,25 @@ import { instanceToPlain } from 'class-transformer';
 import { UserSerializer } from 'src/serializer/user/user.serializer';
 import { DQueryGetListUser } from 'src/dto/user/query-get-list-user.dto';
 import { paginate } from 'src/common/helpers/paginate.helper';
+import { FileService } from '../file/file.service';
+import {
+  MediaTypeEnum,
+  RecordTypeFileEnum,
+  ResourceMediaTypeEnum,
+} from 'src/common/enums/common.enum';
+import { MediaService } from '../media/media.service';
+import { DefaultMediaUrl } from 'src/constants/common';
+import * as fs from 'fs';
+import { MediaItemsEntity } from 'src/entities/media-items.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
-    private readonly usersRepository: Repository<UserEntity>
+    private readonly usersRepository: Repository<UserEntity>,
+    private readonly fileService: FileService,
+    private readonly mediaService: MediaService,
+    private dataSource: DataSource
   ) {}
   private readonly logger = new Logger(UsersService.name, { timestamp: true });
 
@@ -227,13 +240,56 @@ export class UsersService {
     const { id } = payload;
     const existedUser = await this.findOneById({ id });
 
+    const avatarUrl = await this.getAvatarUrl({ id });
+
     const result = instanceToPlain(new UserSerializer(existedUser));
-    return result;
+    return { ...result, avatarUrl };
+  }
+
+  async getAvatarUrl(payload: { id: string }) {
+    const { id } = payload;
+    const existedMedias = await this.mediaService.getMediaByResource({
+      resourceId: id,
+      resourceType: ResourceMediaTypeEnum.USER,
+      mediaType: MediaTypeEnum.USER_AVATAR,
+    });
+
+    const avatarUrl = existedMedias.length ? existedMedias[0].mediaUrl : '';
+
+    return avatarUrl;
   }
 
   async getUsers(payload: { query: DQueryGetListUser }) {
+    const label = '[getUsers]';
     const { textSearch, ...pagination } = payload.query;
-    const queryBuilder = this.usersRepository.createQueryBuilder('u'); // u = users
+
+    const queryBuilder = this.usersRepository
+      .createQueryBuilder('u')
+      .leftJoin(
+        MediaItemsEntity,
+        'media',
+        'u.id = media.resourceId AND media.resourceType = :resourceType AND media.mediaType = :mediaType',
+        {
+          resourceType: ResourceMediaTypeEnum.USER,
+          mediaType: MediaTypeEnum.USER_AVATAR,
+        }
+      )
+      .select([
+        'u.id as id',
+        'u.name as name',
+        'u.email as email',
+        'u.role as role',
+        'u.status as status',
+        'u.zipcode as zipcode',
+        'u.phone as phone',
+        'u.prefecture as prefecture',
+        'u.city as city',
+        'u.street as street',
+        'u.building as building',
+        'u.currentSignInAt as currentSignInAt',
+        'u.lastSignInAt as lastSignInAt',
+      ])
+      .addSelect(['media.mediaUrl as avatarUrl']);
 
     const valueSearch = textSearch?.trim();
     if (valueSearch) {
@@ -245,10 +301,14 @@ export class UsersService {
     }
 
     const result = await paginate(queryBuilder, pagination);
+    this.logger.debug(`${label} result: ${JSON.stringify(result)}`);
 
     return {
       ...result,
-      data: result.data.map((u) => instanceToPlain(new UserSerializer(u))),
+      data: result.data.map((u: Partial<UserEntity>) => {
+        const userData = instanceToPlain(new UserSerializer(u));
+        return userData;
+      }),
     };
   }
 
@@ -278,5 +338,164 @@ export class UsersService {
     this.logger.debug(`${label} user: ${JSON.stringify(user)}`);
 
     return user;
+  }
+
+  async uploadAvatar(payload: { userId: string; file: Express.Multer.File }) {
+    const { userId, file } = payload;
+    const label = '[uploadAvatar]';
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await this.findOneById({ id: userId });
+
+      const existedMedias = await this.mediaService.getMediaByResource({
+        resourceId: userId,
+        resourceType: ResourceMediaTypeEnum.USER,
+        mediaType: MediaTypeEnum.USER_AVATAR,
+      });
+
+      if (existedMedias.length) {
+        const existedFiles = await Promise.all(
+          existedMedias.map(async (media) => {
+            const file = await this.fileService.getFilesByRecord({
+              recordType: RecordTypeFileEnum.MEDIA,
+              recordId: media.id,
+            });
+
+            return file;
+          })
+        );
+
+        await Promise.all(
+          existedFiles.map(async (files) => {
+            await Promise.all(
+              files.map(async (file) => {
+                await this.fileService.deleteFile({ id: file.id }, queryRunner.manager);
+              })
+            );
+          })
+        );
+
+        await queryRunner.manager.softDelete(MediaItemsEntity, {
+          resourceId: userId,
+          resourceType: ResourceMediaTypeEnum.USER,
+          mediaType: MediaTypeEnum.USER_AVATAR,
+        });
+      }
+
+      const media = await this.mediaService.createMedia(
+        {
+          resourceId: userId,
+          resourceType: ResourceMediaTypeEnum.USER,
+          mediaType: MediaTypeEnum.USER_AVATAR,
+          mediaUrl: DefaultMediaUrl.AVATAR,
+        },
+        queryRunner.manager
+      );
+
+      this.logger.debug(`${label} media -> ${JSON.stringify(media)}`);
+
+      await this.fileService.uploadFile(
+        {
+          file,
+          uploadFileDto: {
+            name: file.originalname,
+            recordType: RecordTypeFileEnum.MEDIA,
+            recordId: media.id,
+          },
+        },
+        queryRunner.manager
+      );
+
+      const existedMedia = await this.mediaService.checkExistedMedia(
+        { id: media.id },
+        queryRunner.manager
+      );
+      this.logger.debug(`${label} existedMedia -> ${JSON.stringify(existedMedia)}`);
+
+      await queryRunner.commitTransaction();
+
+      return existedMedia;
+    } catch (error: unknown) {
+      await queryRunner.rollbackTransaction();
+      if (file.path && fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+      const errorMessage =
+        error instanceof Error ? error.message : HTTP_RESPONSE.FILE.UPLOAD_ERROR.message;
+      this.logger.error(`${label} error: ${errorMessage}`);
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        message: errorMessage,
+        code: HTTP_RESPONSE.FILE.UPLOAD_ERROR.code,
+      });
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async deleteAvatar(payload: { userId: string }) {
+    const { userId } = payload;
+    const label = '[deleteAvatar]';
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await this.findOneById({ id: userId });
+
+      const existedMedias = await this.mediaService.getMediaByResource({
+        resourceId: userId,
+        resourceType: ResourceMediaTypeEnum.USER,
+        mediaType: MediaTypeEnum.USER_AVATAR,
+      });
+
+      if (existedMedias.length) {
+        const existedFiles = await Promise.all(
+          existedMedias.map(async (media) => {
+            const file = await this.fileService.getFilesByRecord({
+              recordType: RecordTypeFileEnum.MEDIA,
+              recordId: media.id,
+            });
+
+            return file;
+          })
+        );
+
+        await Promise.all(
+          existedFiles.map(async (files) => {
+            await Promise.all(
+              files.map(async (file) => {
+                await this.fileService.deleteFile({ id: file.id }, queryRunner.manager);
+              })
+            );
+          })
+        );
+
+        await queryRunner.manager.softDelete(MediaItemsEntity, {
+          resourceId: userId,
+          resourceType: ResourceMediaTypeEnum.USER,
+          mediaType: MediaTypeEnum.USER_AVATAR,
+        });
+      }
+
+      await queryRunner.commitTransaction();
+    } catch (error: unknown) {
+      await queryRunner.rollbackTransaction();
+      const errorMessage =
+        error instanceof Error ? error.message : HTTP_RESPONSE.FILE.UPLOAD_ERROR.message;
+      this.logger.error(`${label} error: ${errorMessage}`);
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        message: errorMessage,
+        code: HTTP_RESPONSE.FILE.UPLOAD_ERROR.code,
+      });
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

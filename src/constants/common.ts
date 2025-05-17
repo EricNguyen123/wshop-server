@@ -8,3 +8,8 @@ export const ValidationConfig = {
   MIN_LENGTH_UP_CASE: 1,
   MIN_SYMBOL: 1,
 };
+
+export const DefaultMediaUrl = {
+  AVATAR: 'https://github.com/shadcn.png',
+  BANNER: 'https://github.com/shadcn.png',
+};

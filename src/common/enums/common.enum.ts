@@ -28,3 +28,18 @@ export enum BusinessTypeOtpEnum {
   FORGOT_PASSWORD = 'FORGOT_PASSWORD',
   RESTORE = 'RESTORE',
 }
+
+export enum RecordTypeFileEnum {
+  MEDIA = 'MEDIA',
+}
+
+export enum ResourceMediaTypeEnum {
+  USER = 'USER',
+  BANNER = 'BANNER',
+  PRODUCT = 'PRODUCT',
+}
+
+export enum MediaTypeEnum {
+  USER_AVATAR = 'USER_AVATAR',
+  BANNER_IMAGE = 'BANNER_IMAGE',
+}

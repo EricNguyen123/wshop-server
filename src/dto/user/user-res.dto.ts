@@ -44,4 +44,9 @@ export class DUserRes {
 
   @ApiProperty({ example: '2025-04-10 15:34:54.726739' })
   lastSignInAt?: Date;
+
+  @ApiProperty({
+    example: 'https://images.pexels.com/220453',
+  })
+  avatarUrl?: string;
 }

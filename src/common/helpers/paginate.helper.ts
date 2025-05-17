@@ -15,17 +15,34 @@ export async function paginate<T extends ObjectLiteral>(
 
   if (sort) {
     const [field, order] = sort.split(',');
-    queryBuilder.orderBy(
-      `${queryBuilder.alias}.${field}`,
-      (order?.toUpperCase() === SORT.DESC ? SORT.DESC : SORT.ASC) as 'ASC' | 'DESC'
-    );
+    const sortOrder = order?.toUpperCase() === SORT.DESC ? 'DESC' : 'ASC';
+
+    try {
+      if (field.includes('.')) {
+        queryBuilder.orderBy(field, sortOrder);
+      } else {
+        queryBuilder.orderBy(`${queryBuilder.alias}.${field}`, sortOrder);
+      }
+    } catch {
+      queryBuilder.orderBy(`${queryBuilder.alias}.created_at`, 'DESC');
+    }
   } else {
-    queryBuilder.orderBy(`${queryBuilder.alias}.created_at`, SORT.DESC as 'ASC' | 'DESC');
+    queryBuilder.orderBy(`${queryBuilder.alias}.created_at`, 'DESC');
   }
 
-  queryBuilder.skip((page - 1) * limit).take(limit);
+  queryBuilder.offset((page - 1) * limit).limit(limit);
 
-  const [data, total] = await queryBuilder.getManyAndCount();
+  const data = await queryBuilder.getRawMany();
+
+  const countQueryBuilder = queryBuilder.clone();
+  countQueryBuilder
+    .offset(undefined)
+    .limit(undefined)
+    .orderBy()
+    .select('COUNT(DISTINCT ' + queryBuilder.alias + '.id)', 'count');
+
+  const totalResult: { count: string } | undefined = await countQueryBuilder.getRawOne();
+  const total = parseInt(totalResult?.count || '0');
 
   return {
     data,

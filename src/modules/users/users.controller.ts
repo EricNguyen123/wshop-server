@@ -9,11 +9,20 @@ import {
   Post,
   Put,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { DParamsUser } from 'src/dto/user/params-user.dto';
-import { ApiBearerAuth, ApiExtraModels, ApiResponse, getSchemaPath } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiExtraModels,
+  ApiResponse,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/base.decorator';
 import { RolesGuard } from '../auth/guards/roles/roles.guard';
 import { ValidRolesEnum } from 'src/common/enums/base.enum';
@@ -27,6 +36,10 @@ import { DUserRes } from 'src/dto/user/user-res.dto';
 import { AuthService } from '../auth/auth.service';
 import { DUserCreate } from 'src/dto/user/user-create.dto';
 import { DUserDeleteResSuccess } from 'src/dto/user/user-delete-res-success.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerConfig } from 'src/config/multer/multer.config';
+import { DUploadAvatar } from 'src/dto/user/upload-avatar.dto';
+import { DUserAvatarResSuccess } from 'src/dto/user/user-avatar-res-success.dto';
 
 @Controller('users')
 export class UsersController {
@@ -174,6 +187,69 @@ export class UsersController {
       message: HTTP_RESPONSE.COMMON.CREATE_SUCCESS.message,
       code: HTTP_RESPONSE.COMMON.CREATE_SUCCESS.code,
       data: result,
+    };
+  }
+
+  @ApiBearerAuth('access-token')
+  @ApiResponse({
+    status: 200,
+    description: 'Delete avatar successfully',
+    type: DUserDeleteResSuccess,
+  })
+  @Roles(ValidRolesEnum.ADMIN, ValidRolesEnum.EDITOR, ValidRolesEnum.USER)
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
+  @Delete('upload-avatar/:userId')
+  async deleteAvatar(@Param() params: DParamsUser): Promise<DUserDeleteResSuccess> {
+    const { userId } = params;
+    await this.usersService.deleteAvatar({ userId });
+    return {
+      status: HttpStatus.OK,
+      message: HTTP_RESPONSE.COMMON.DELETE_SUCCESS.message,
+      code: HTTP_RESPONSE.COMMON.DELETE_SUCCESS.code,
+    };
+  }
+
+  @ApiBearerAuth('access-token')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+        userId: { type: 'string', format: 'uuid' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User avatar updated successfully',
+    type: DUserAvatarResSuccess,
+  })
+  @Roles(ValidRolesEnum.ADMIN, ValidRolesEnum.EDITOR, ValidRolesEnum.USER)
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
+  @Post('upload-avatar')
+  @UseInterceptors(FileInterceptor('file', multerConfig))
+  async uploadAvatar(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() data: DUploadAvatar
+  ): Promise<DUserAvatarResSuccess> {
+    const label = '[uploadAvatar]';
+    const result = await this.usersService.uploadAvatar({ userId: data.userId, file });
+    this.logger.debug(`${label} result -> ${JSON.stringify(result)}`);
+    return {
+      status: HttpStatus.OK,
+      message: HTTP_RESPONSE.COMMON.UPDATE_SUCCESS.message,
+      code: HTTP_RESPONSE.COMMON.UPDATE_SUCCESS.code,
+      data: {
+        id: result.id,
+        userId: result.resourceId,
+        avatarUrl: result.mediaUrl,
+      },
     };
   }
 }
