@@ -7,6 +7,7 @@ import { CartItemsEntity } from './cart-items.entity';
 import { ProductTypesEntity } from './product-types.entity';
 import { FavoritesEntity } from './favorites.entity';
 import { BaseModel } from './base-model';
+import { StatusProductEnum } from 'src/common/enums/common.enum';
 
 @Entity('products')
 export class ProductsEntity extends BaseModel {
@@ -31,10 +32,10 @@ export class ProductsEntity extends BaseModel {
   @Column({ name: 'description', type: 'text' })
   description: string;
 
-  @Column({ name: 'status', type: 'int' })
-  status: number;
+  @Column({ name: 'status', type: 'int', default: StatusProductEnum.DRAFT })
+  status: StatusProductEnum;
 
-  @Column({ name: 'multiplication_rate', type: 'int' })
+  @Column({ name: 'multiplication_rate', type: 'float' })
   multiplicationRate: number;
 
   @Column({ name: 'discount', type: 'float' })

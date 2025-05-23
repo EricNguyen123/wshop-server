@@ -13,6 +13,7 @@ import { redisOption } from './config/redis/redis.config';
 import { FileModule } from './modules/file/file.module';
 import { MediaModule } from './modules/media/media.module';
 import { BannerModule } from './modules/banner/banner.module';
+import { ProductsModule } from './modules/products/products.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { BannerModule } from './modules/banner/banner.module';
     FileModule,
     MediaModule,
     BannerModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

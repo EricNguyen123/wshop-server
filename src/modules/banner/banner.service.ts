@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BannersEntity } from 'src/entities/banners.entity';
-import { DataSource, ILike, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { DataSource, ILike, Repository } from 'typeorm';
 import { FileService } from '../file/file.service';
 import { MediaService } from '../media/media.service';
 import { ICreateBanner, IUpdateBanner } from 'src/interfaces/banner.interface';
@@ -25,6 +25,7 @@ import { DQueryGetListBanner } from 'src/dto/banner/query-get-list-banner.dto';
 import { paginate } from 'src/common/helpers/paginate.helper';
 import { isErrorWithResponseCode } from 'src/utils/common.util';
 import { MediaItemsEntity } from 'src/entities/media-items.entity';
+import { convertISOStringToSQLDate } from 'src/utils/time.util';
 
 @Injectable()
 export class BannerService {
@@ -54,24 +55,27 @@ export class BannerService {
         });
       }
 
-      const overlappingBanner = await queryRunner.manager.findOne(BannersEntity, {
-        where: [
-          {
-            numberOrder: banner.numberOrder,
-            startDate: LessThanOrEqual(new Date(banner.endDate)),
-            endDate: MoreThanOrEqual(new Date(banner.startDate)),
-          },
-        ],
-      });
+      // const overlappingBanner = await queryRunner.manager.findOne(BannersEntity, {
+      //   where: [
+      //     {
+      //       numberOrder: banner.numberOrder,
+      //       startDate: LessThanOrEqual(new Date(banner.endDate)),
+      //       endDate: MoreThanOrEqual(new Date(banner.startDate)),
+      //     },
+      //   ],
+      // });
 
-      if (overlappingBanner) {
-        throw new BadRequestException({
-          status: HttpStatus.BAD_REQUEST,
-          message: HTTP_RESPONSE.BANNER.DATE_EXISTED.message,
-          code: HTTP_RESPONSE.BANNER.DATE_EXISTED.code,
-        });
-      }
+      // if (overlappingBanner) {
+      //   throw new BadRequestException({
+      //     status: HttpStatus.BAD_REQUEST,
+      //     message: HTTP_RESPONSE.BANNER.DATE_EXISTED.message,
+      //     code: HTTP_RESPONSE.BANNER.DATE_EXISTED.code,
+      //   });
+      // }
 
+      banner.startDate = convertISOStringToSQLDate(banner.startDate);
+      banner.endDate = convertISOStringToSQLDate(banner.endDate);
+      this.logger.debug(`${label} banner -> ${JSON.stringify(banner)}`);
       const bannerEntity = queryRunner.manager.create(BannersEntity, {
         ...banner,
         url: this.fileService.getUploadedFileUrl({
@@ -197,6 +201,13 @@ export class BannerService {
       });
     }
 
+    if (data.startDate) {
+      data.startDate = convertISOStringToSQLDate(data.startDate);
+    }
+    if (data.endDate) {
+      data.endDate = convertISOStringToSQLDate(data.endDate);
+    }
+    this.logger.debug(`${label} banner -> ${JSON.stringify(data)}`);
     Object.assign(existedBanner, {
       descriptions: data.descriptions ?? existedBanner.descriptions,
       startDate: data.startDate ?? existedBanner.startDate,

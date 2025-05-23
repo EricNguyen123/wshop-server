@@ -42,4 +42,14 @@ export enum ResourceMediaTypeEnum {
 export enum MediaTypeEnum {
   USER_AVATAR = 'USER_AVATAR',
   BANNER_IMAGE = 'BANNER_IMAGE',
+  PRODUCT_IMAGE = 'PRODUCT_IMAGE',
+}
+
+export enum StatusProductEnum {
+  DRAFT = 0,
+  PENDING = 1,
+  ACTIVE = 2,
+  INACTIVE = 3,
+  OUT_OF_STOCK = 4,
+  DISCONTINUED = 5,
 }

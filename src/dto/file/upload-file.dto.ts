@@ -4,7 +4,7 @@ import { RecordTypeFileEnum } from 'src/common/enums/common.enum';
 export class DUploadFile {
   @IsNotEmpty()
   @IsString()
-  name: string;
+  name?: string;
 
   @IsNotEmpty()
   @IsString()

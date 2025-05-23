@@ -204,12 +204,14 @@ export const HTTP_RESPONSE = {
       code: 5006,
     },
   },
+
   MEDIA: {
     NOT_FOUND: {
       message: 'Media not found',
       code: 6000,
     },
   },
+
   BANNER: {
     DATE_INVALID: {
       message: 'Start date must be less than end date',
@@ -222,6 +224,13 @@ export const HTTP_RESPONSE = {
     NOT_FOUND: {
       message: 'Banner not found',
       code: 7002,
+    },
+  },
+
+  PRODUCT: {
+    NOT_FOUND: {
+      message: 'Product not found',
+      code: 8000,
     },
   },
 };

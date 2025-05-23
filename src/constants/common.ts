@@ -12,4 +12,7 @@ export const ValidationConfig = {
 export const DefaultMediaUrl = {
   AVATAR: 'https://github.com/shadcn.png',
   BANNER: 'https://github.com/shadcn.png',
+  PRODUCT: 'https://github.com/shadcn.png',
 };
+
+export const DefaultNumberFiles = 10;

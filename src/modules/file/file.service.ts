@@ -84,7 +84,7 @@ export class FileService {
       const savedBlob = await repoManager.save(blob);
 
       const attachment = new ActiveStorageAttachmentsEntity();
-      attachment.name = uploadFileDto.name;
+      attachment.name = uploadFileDto.name ?? file.originalname;
       attachment.recordType = uploadFileDto.recordType;
       attachment.recordId = uploadFileDto.recordId;
       attachment.blobId = savedBlob.id;
@@ -216,5 +216,50 @@ export class FileService {
   getUploadedFileUrl(payload: { filename: string }): string {
     const { filename } = payload;
     return `${envs.appUrl}/${filename}`;
+  }
+
+  async uploadMultipleFiles(
+    payload: {
+      files: Express.Multer.File[];
+      uploadFileDtos: DUploadFile[];
+    },
+    manager?: EntityManager
+  ) {
+    const label = '[uploadMultipleFiles]';
+    const { files, uploadFileDtos } = payload;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    const repoManager = manager ?? queryRunner.manager;
+    const attachments: ActiveStorageAttachmentsEntity[] = [];
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileDto = uploadFileDtos[i];
+
+        attachments.push(await this.uploadFile({ file, uploadFileDto: fileDto }, repoManager));
+      }
+      this.logger.debug(`${label} attachments -> ${JSON.stringify(attachments)}`);
+
+      await queryRunner.commitTransaction();
+      return attachments;
+    } catch (error: unknown) {
+      await queryRunner.rollbackTransaction();
+      for (const attachment of attachments) {
+        await this.deleteFile({ id: attachment.id }, repoManager);
+      }
+      const errorMessage =
+        error instanceof Error ? error.message : HTTP_RESPONSE.FILE.UPLOAD_ERROR.message;
+      this.logger.error(`${label} error: ${errorMessage}`);
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        message: errorMessage,
+        code: HTTP_RESPONSE.FILE.UPLOAD_ERROR.code,
+      });
+    } finally {
+      await queryRunner.release();
+    }
   }
 }
