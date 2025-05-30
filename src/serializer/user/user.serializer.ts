@@ -3,13 +3,13 @@ import { UserEntity } from 'src/entities/user.entity';
 
 export class UserSerializer extends UserEntity {
   @Exclude()
-  declare createdDate: Date;
+  declare createdAt: Date;
 
   @Exclude()
   declare createdBy: string;
 
   @Exclude()
-  declare updatedDate: Date;
+  declare updatedAt: Date;
 
   @Exclude()
   declare updatedBy: string;

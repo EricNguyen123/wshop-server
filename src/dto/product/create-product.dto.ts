@@ -30,4 +30,7 @@ export class DCreateProduct {
 
   @ApiProperty({ example: 0 })
   discount: number;
+
+  @ApiProperty({ isArray: true, example: ['d52af9ea-afb2-441e-b827-03df0c65c835'] })
+  categoryIds?: string[];
 }

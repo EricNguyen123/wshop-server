@@ -28,12 +28,19 @@ import { addAdvancedSearch, createSubquery } from 'src/common/helpers/query.help
 import { paginate } from 'src/common/helpers/paginate.helper';
 import { ActiveStorageAttachmentsEntity } from 'src/entities/active-storage-attachments.entity';
 import { ActiveStorageBlobsEntity } from 'src/entities/active-storage-blobs.entity';
+import { CategoryTinyEntity } from 'src/entities/category-tinies.entity';
+import { CategoriesEntity } from 'src/entities/categories.entity';
+import { ICategory } from 'src/interfaces/category.interface';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(ProductsEntity)
     private readonly productRepository: Repository<ProductsEntity>,
+    @InjectRepository(CategoryTinyEntity)
+    private readonly categoryTinyRepository: Repository<CategoryTinyEntity>,
+    @InjectRepository(CategoriesEntity)
+    private readonly categoriesRepository: Repository<CategoriesEntity>,
     private readonly fileService: FileService,
     private readonly mediaService: MediaService,
     private dataSource: DataSource
@@ -54,6 +61,33 @@ export class ProductsService {
       });
       const existedProduct = await queryRunner.manager.save(productEntity);
       this.logger.debug(`${label} existedProduct -> ${JSON.stringify(existedProduct)}`);
+
+      if (product.categoryIds) {
+        this.logger.debug(`${label} product.categoryIds -> ${JSON.stringify(product.categoryIds)}`);
+        if (!Array.isArray(product.categoryIds)) {
+          product.categoryIds = [product.categoryIds];
+        }
+        const categories = await this.categoriesRepository.findBy({
+          id: In(product.categoryIds),
+        });
+        this.logger.debug(`${label} categories -> ${JSON.stringify(categories)}`);
+        if (categories.length !== product.categoryIds.length) {
+          throw new BadRequestException({
+            status: HttpStatus.BAD_REQUEST,
+            message: HTTP_RESPONSE.CATEGORY.NOT_FOUND.message,
+            code: HTTP_RESPONSE.CATEGORY.NOT_FOUND.code,
+          });
+        }
+
+        const categoryTinyEntities = categories.map((category) => {
+          return queryRunner.manager.create(CategoryTinyEntity, {
+            productId: existedProduct.id,
+            categoryId: category.id,
+          });
+        });
+
+        await queryRunner.manager.save(CategoryTinyEntity, categoryTinyEntities);
+      }
 
       const medias = await Promise.all(
         files.map(async (file) => {
@@ -100,11 +134,15 @@ export class ProductsService {
         })
       );
 
+      const categories = await this.getCategoryByProductId({ productId: existedProduct.id });
+      this.logger.debug(`${label} categories -> ${JSON.stringify(categories)}`);
+
       await queryRunner.commitTransaction();
 
       return {
         product: instanceToPlain(new ProductSerializer(existedProduct)),
         medias: existedMedias,
+        categories,
       };
     } catch (error: unknown) {
       await queryRunner.rollbackTransaction();
@@ -159,6 +197,15 @@ export class ProductsService {
       .where('m.mediaType = :mediaType', { mediaType: MediaTypeEnum.PRODUCT_IMAGE })
       .as('medias');
 
+    const categorySubquery = createSubquery(CategoryTinyEntity, 'ct') // ct = category_tiny
+      .leftJoin(CategoriesEntity, 'c', 'c.id = ct.categoryId ') // c = categories
+      .relatedTo('p', 'productId')
+      .select([
+        { field: 'c.id', alias: 'id' },
+        { field: 'c.name', alias: 'name' },
+      ])
+      .as('categories');
+
     const queryBuilder = this.productRepository
       .createQueryBuilder('p') // p = products
       .select([
@@ -174,7 +221,8 @@ export class ProductsService {
         'p.multiplicationRate as multiplicationRate',
         'p.discount as discount',
       ])
-      .addSelect(mediaSubquery.build<ProductsEntity>(), 'medias');
+      .addSelect(mediaSubquery.build<ProductsEntity>(), 'medias')
+      .addSelect(categorySubquery.build<CategoryTinyEntity>(), 'categories');
 
     if (textSearch) {
       addAdvancedSearch(queryBuilder, textSearch, [{ field: 'name' }, { field: 'code' }]);
@@ -219,7 +267,7 @@ export class ProductsService {
     await queryRunner.startTransaction();
 
     try {
-      const { mediaIds: rawMediaIds, ...product } = data;
+      const { mediaIds: rawMediaIds, categoryIds: rawCategoryIds, ...product } = data;
 
       const mediaIds = Array.isArray(rawMediaIds) ? rawMediaIds : rawMediaIds ? [rawMediaIds] : [];
       this.logger.debug(`${label} mediaIds -> ${JSON.stringify(mediaIds)}`);
@@ -247,6 +295,61 @@ export class ProductsService {
         where: { id: productId },
       });
       this.logger.debug(`${label} updatedProduct -> ${JSON.stringify(updatedProduct)}`);
+
+      const existedCategories = await this.getCategoryByProductId({ productId: existedProduct.id });
+      this.logger.debug(`${label} categories -> ${JSON.stringify(existedCategories)}`);
+
+      const categoryIdsArray: string[] = Array.isArray(rawCategoryIds)
+        ? rawCategoryIds
+        : rawCategoryIds
+          ? [rawCategoryIds]
+          : [];
+
+      const deleteCategories: string[] = (existedCategories || [])
+        .filter((cat: ICategory) => !categoryIdsArray.includes(cat.id))
+        .map((cat: ICategory) => cat.id);
+
+      if (deleteCategories.length > 0) {
+        await queryRunner.manager.softDelete(CategoryTinyEntity, {
+          productId: productId,
+          categoryId: In(deleteCategories),
+        });
+      }
+
+      const categories = await this.categoriesRepository.findBy({
+        id: In(categoryIdsArray),
+      });
+
+      this.logger.debug(`${label} categories -> ${JSON.stringify(categories)}`);
+
+      if (categories.length !== categoryIdsArray.length) {
+        throw new BadRequestException({
+          status: HttpStatus.BAD_REQUEST,
+          message: HTTP_RESPONSE.CATEGORY.NOT_FOUND.message,
+          code: HTTP_RESPONSE.CATEGORY.NOT_FOUND.code,
+        });
+      }
+
+      const existingCategoryTiny = await queryRunner.manager.find(CategoryTinyEntity, {
+        where: { productId: productId },
+      });
+
+      const existingCategoryIds = existingCategoryTiny.map((ct) => ct.categoryId);
+
+      const newCategoryIds = categoryIdsArray.filter(
+        (catId) => !existingCategoryIds.includes(catId)
+      );
+
+      if (newCategoryIds.length > 0) {
+        const categoryTinyEntities = newCategoryIds.map((categoryId) => {
+          return queryRunner.manager.create(CategoryTinyEntity, {
+            productId: productId,
+            categoryId: categoryId,
+          });
+        });
+
+        await queryRunner.manager.save(CategoryTinyEntity, categoryTinyEntities);
+      }
 
       const existedOldMedias = await this.mediaService.checkExistedMediaByResource({
         resourceId: productId,
@@ -344,11 +447,17 @@ export class ProductsService {
         : [];
       this.logger.debug(`${label} oldMedias -> ${JSON.stringify(oldMedias)}`);
 
+      const existedUpdateCategories = await this.getCategoryByProductId({
+        productId: existedProduct.id,
+      });
+      this.logger.debug(`${label} categories -> ${JSON.stringify(categories)}`);
+
       await queryRunner.commitTransaction();
 
       return {
         ...instanceToPlain(new ProductSerializer({ id: existedProduct.id, ...product })),
         medias: [...existedMedias, ...oldMedias],
+        categories: existedUpdateCategories,
       };
     } catch (error: unknown) {
       if (queryRunner.isTransactionActive) {
@@ -472,6 +581,15 @@ export class ProductsService {
       .where('m.mediaType = :mediaType', { mediaType: MediaTypeEnum.PRODUCT_IMAGE })
       .as('medias');
 
+    const categorySubquery = createSubquery(CategoryTinyEntity, 'ct') // ct = category_tiny
+      .leftJoin(CategoriesEntity, 'c', 'c.id = ct.categoryId ') // c = categories
+      .relatedTo('p', 'productId')
+      .select([
+        { field: 'c.id', alias: 'id' },
+        { field: 'c.name', alias: 'name' },
+      ])
+      .as('categories');
+
     const queryBuilder = this.productRepository
       .createQueryBuilder('p') // p = products
       .select([
@@ -488,6 +606,7 @@ export class ProductsService {
         'p.discount as discount',
       ])
       .addSelect(mediaSubquery.build<ProductsEntity>(), 'medias')
+      .addSelect(categorySubquery.build<CategoryTinyEntity>(), 'categories')
       .where('p.id = :productId', { productId });
 
     const result: Partial<ProductsEntity> | undefined = await queryBuilder.getRawOne();
@@ -502,5 +621,28 @@ export class ProductsService {
     }
 
     return instanceToPlain(new ProductSerializer(result));
+  }
+
+  async getCategoryByProductId(payload: { productId: string }) {
+    const { productId } = payload;
+    const categorySubquery = createSubquery(CategoryTinyEntity, 'ct') // ct = category_tiny
+      .leftJoin(CategoriesEntity, 'c', 'c.id = ct.categoryId ') // c = categories
+      .relatedTo('p', 'productId')
+      .select([
+        { field: 'c.id', alias: 'id' },
+        { field: 'c.name', alias: 'name' },
+      ])
+      .as('categories');
+
+    const queryBuilder = this.productRepository
+      .createQueryBuilder('p') // p = products
+      .select(['p.id as id'])
+      .addSelect(categorySubquery.build<CategoryTinyEntity>(), 'categories')
+      .where('p.id = :productId', { productId });
+
+    const existedProduct: { id: string; categories: ICategory[] } | undefined =
+      await queryBuilder.getRawOne();
+
+    return existedProduct?.categories;
   }
 }

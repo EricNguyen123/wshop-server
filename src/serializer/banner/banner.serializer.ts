@@ -3,13 +3,13 @@ import { BannersEntity } from 'src/entities/banners.entity';
 
 export class BannersSerializer extends BannersEntity {
   @Exclude()
-  declare createdDate: Date;
+  declare createdAt: Date;
 
   @Exclude()
   declare createdBy: string;
 
   @Exclude()
-  declare updatedDate: Date;
+  declare updatedAt: Date;
 
   @Exclude()
   declare updatedBy: string;

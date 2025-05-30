@@ -14,6 +14,7 @@ import { FileModule } from './modules/file/file.module';
 import { MediaModule } from './modules/media/media.module';
 import { BannerModule } from './modules/banner/banner.module';
 import { ProductsModule } from './modules/products/products.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ProductsModule } from './modules/products/products.module';
     MediaModule,
     BannerModule,
     ProductsModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

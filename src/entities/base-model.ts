@@ -19,7 +19,7 @@ export class BaseModel extends BaseEntity {
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
-  createdDate: Date;
+  createdAt: Date;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
@@ -31,7 +31,7 @@ export class BaseModel extends BaseEntity {
     default: () => 'CURRENT_TIMESTAMP(6)',
     onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
-  updatedDate: Date;
+  updatedAt: Date;
 
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
   updatedBy: string;

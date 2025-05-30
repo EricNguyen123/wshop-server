@@ -1,4 +1,16 @@
-import { SelectQueryBuilder, ObjectLiteral, Brackets, Like, ILike } from 'typeorm';
+import { HttpStatus, NotFoundException } from '@nestjs/common';
+import {
+  SelectQueryBuilder,
+  ObjectLiteral,
+  Brackets,
+  Like,
+  ILike,
+  EntityManager,
+  EntityTarget,
+  FindManyOptions,
+  In,
+  QueryRunner,
+} from 'typeorm';
 
 /**
  * @param entityClass Entity class to query
@@ -230,4 +242,157 @@ export function addAdvancedSearch<T extends ObjectLiteral>(
   );
 
   return queryBuilder;
+}
+
+export interface FindByIdsOptions<T> {
+  relations?: string[];
+  select?: (keyof T)[];
+  throwOnMissing?: boolean;
+  customError?: {
+    status: HttpStatus;
+    message: string;
+    code: string | number;
+  };
+}
+
+export async function findEntitiesByIds<T extends ObjectLiteral>(
+  manager: EntityManager,
+  entityClass: EntityTarget<T>,
+  ids: any[],
+  options?: FindByIdsOptions<T>
+): Promise<T[]> {
+  if (!ids || ids.length === 0) {
+    return [];
+  }
+
+  const findOptions: FindManyOptions<T> = {
+    where: { id: In(ids) } as Partial<Record<keyof T, any>>,
+  };
+
+  if (options?.relations) {
+    findOptions.relations = options.relations;
+  }
+
+  if (options?.select) {
+    findOptions.select = options.select;
+  }
+
+  const entities = await manager.find(entityClass, findOptions);
+
+  if (options?.throwOnMissing && entities.length !== ids.length) {
+    const foundIds = entities.map((entity: T & { id: unknown }) => entity.id);
+    const missingIds = ids.filter((id) => !foundIds.includes(id));
+
+    if (options.customError) {
+      throw new NotFoundException(options.customError);
+    } else {
+      throw new NotFoundException({
+        status: HttpStatus.NOT_FOUND,
+        message: `Entities not found with IDs: ${missingIds.join(', ')}`,
+        code: 'ENTITIES_NOT_FOUND',
+      });
+    }
+  }
+
+  return entities;
+}
+
+export async function findEntitiesByIdsWithQueryRunner<T extends ObjectLiteral>(
+  queryRunner: QueryRunner,
+  entityClass: EntityTarget<T>,
+  ids: any[],
+  options?: FindByIdsOptions<T>
+): Promise<T[]> {
+  return findEntitiesByIds(queryRunner.manager, entityClass, ids, options);
+}
+
+export async function validateAndAssignEntities<
+  T extends ObjectLiteral,
+  K extends ObjectLiteral,
+  P extends keyof T,
+>(
+  manager: EntityManager | QueryRunner,
+  entityClass: EntityTarget<K>,
+  ids: any[],
+  targetEntity: T,
+  relationshipProperty: P,
+  errorConfig?: {
+    status: HttpStatus;
+    message: string;
+    code: string | number;
+  }
+): Promise<void> {
+  if (!ids || ids.length === 0) {
+    return;
+  }
+
+  function isQueryRunner(obj: unknown): obj is QueryRunner {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      'manager' in obj &&
+      typeof (obj as { manager?: unknown }).manager === 'object' &&
+      (obj as { manager?: unknown }).manager !== null
+    );
+  }
+
+  const actualManager = isQueryRunner(manager) ? manager.manager : manager;
+
+  const entities = await findEntitiesByIds(actualManager, entityClass, ids, {
+    throwOnMissing: true,
+    customError: errorConfig,
+  });
+
+  (targetEntity[relationshipProperty] as unknown as K[]) = entities;
+}
+
+export async function validateMultipleRelationships(
+  manager: EntityManager | QueryRunner,
+  validations: Array<{
+    entityClass: EntityTarget<any>;
+    ids: any[];
+    errorConfig?: {
+      status: HttpStatus;
+      message: string;
+      code: string;
+    };
+  }>
+): Promise<Record<string, any[]>> {
+  const results: Record<string, any[]> = {};
+
+  function isQueryRunner(obj: unknown): obj is QueryRunner {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      'manager' in obj &&
+      typeof (obj as { manager?: unknown }).manager === 'object' &&
+      (obj as { manager?: unknown }).manager !== null
+    );
+  }
+
+  for (let i = 0; i < validations.length; i++) {
+    const validation = validations[i];
+    const entityName =
+      typeof validation.entityClass === 'function' && 'name' in validation.entityClass
+        ? (validation.entityClass as { name: string }).name
+        : typeof validation.entityClass === 'object' &&
+            validation.entityClass !== null &&
+            'name' in validation.entityClass
+          ? (validation.entityClass as { name: string }).name
+          : JSON.stringify(validation.entityClass);
+
+    const actualManager = isQueryRunner(manager) ? manager.manager : manager;
+
+    results[entityName] = await findEntitiesByIds(
+      actualManager,
+      validation.entityClass,
+      validation.ids,
+      {
+        throwOnMissing: true,
+        customError: validation.errorConfig,
+      }
+    );
+  }
+
+  return results;
 }

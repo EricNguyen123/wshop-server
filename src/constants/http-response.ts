@@ -233,4 +233,27 @@ export const HTTP_RESPONSE = {
       code: 8000,
     },
   },
+
+  CATEGORY: {
+    NOT_FOUND: {
+      message: 'Category not found',
+      code: 9000,
+    },
+    CREATE_ERROR: {
+      message: 'Create category error',
+      code: 9001,
+    },
+    UPDATE_ERROR: {
+      message: 'Update category error',
+      code: 9002,
+    },
+    DELETE_ERROR: {
+      message: 'Delete category error',
+      code: 9003,
+    },
+    CATEGORY_PRODUCT_LINK_NOT_FOUND: {
+      message: 'Category product link not found',
+      code: 9004,
+    },
+  },
 };

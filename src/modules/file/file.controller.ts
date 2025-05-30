@@ -64,7 +64,7 @@ export class FileController {
           contentType: result.activeStorageBlob.contentType,
           byteSize: result.activeStorageBlob.byteSize,
         },
-        createdAt: result.createdDate,
+        createdAt: result.createdAt,
       },
     };
   }
@@ -80,14 +80,14 @@ export class FileController {
         name: fileData.attachment.name,
         recordType: fileData.attachment.recordType,
         recordId: fileData.attachment.recordId,
-        createdAt: fileData.attachment.createdDate,
+        createdAt: fileData.attachment.createdAt,
       },
       blob: {
         id: fileData.blob.id,
         filename: fileData.blob.filename,
         contentType: fileData.blob.contentType,
         byteSize: fileData.blob.byteSize,
-        createdAt: fileData.blob.createdDate,
+        createdAt: fileData.blob.createdAt,
       },
     };
 
@@ -139,7 +139,7 @@ export class FileController {
         contentType: attachment.activeStorageBlob.contentType,
         byteSize: attachment.activeStorageBlob.byteSize,
       },
-      createdAt: attachment.createdDate,
+      createdAt: attachment.createdAt,
     }));
 
     return {

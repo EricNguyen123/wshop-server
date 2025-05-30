@@ -9,8 +9,10 @@ export interface ICreateProduct {
   status: number;
   multiplicationRate: number;
   discount: number;
+  categoryIds?: string[];
 }
 
 export interface IUpdateProduct extends Partial<ICreateProduct> {
   mediaIds?: string[];
+  categoryIds?: string[];
 }
