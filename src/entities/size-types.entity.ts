@@ -1,7 +1,6 @@
 import { Column, Entity, OneToMany } from 'typeorm';
 import { ProductTypesEntity } from './product-types.entity';
 import { BaseModel } from './base-model';
-import { SizeTypesEnum } from 'src/common/enums/common.enum';
 
 @Entity('size_types')
 export class SizeTypesEntity extends BaseModel {
@@ -11,9 +10,12 @@ export class SizeTypesEntity extends BaseModel {
   @Column({
     name: 'size_type',
     type: 'varchar',
-    default: SizeTypesEnum.MALE,
+    length: 255,
   })
-  sizeType: SizeTypesEnum;
+  sizeType: string;
+
+  @Column({ name: 'name', type: 'text' })
+  name: string;
 
   @OneToMany(() => ProductTypesEntity, (productTypes) => productTypes.sizeType, {
     cascade: true,

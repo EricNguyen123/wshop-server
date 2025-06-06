@@ -15,6 +15,7 @@ import { MediaModule } from './modules/media/media.module';
 import { BannerModule } from './modules/banner/banner.module';
 import { ProductsModule } from './modules/products/products.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { ColorTypesModule } from './modules/color-types/color-types.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
     BannerModule,
     ProductsModule,
     CategoriesModule,
+    ColorTypesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

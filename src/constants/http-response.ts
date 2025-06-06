@@ -256,4 +256,15 @@ export const HTTP_RESPONSE = {
       code: 9004,
     },
   },
+
+  COLOR_TYPE: {
+    NOT_FOUND: {
+      message: 'Color type not found',
+      code: 10000,
+    },
+    EXISTED_COLOR_TYPE: {
+      message: 'Color type is used in product type',
+      code: 10001,
+    },
+  },
 };

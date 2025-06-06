@@ -19,11 +19,6 @@ export enum ShippingStatusEnum {
   COMPLETE = 3,
 }
 
-export enum SizeTypesEnum {
-  MALE = 0,
-  FEMALE = 1,
-}
-
 export enum BusinessTypeOtpEnum {
   FORGOT_PASSWORD = 'FORGOT_PASSWORD',
   RESTORE = 'RESTORE',
