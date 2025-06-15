@@ -16,6 +16,7 @@ import { BannerModule } from './modules/banner/banner.module';
 import { ProductsModule } from './modules/products/products.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { ColorTypesModule } from './modules/color-types/color-types.module';
+import { SizeTypesModule } from './modules/size-types/size-types.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ColorTypesModule } from './modules/color-types/color-types.module';
     ProductsModule,
     CategoriesModule,
     ColorTypesModule,
+    SizeTypesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

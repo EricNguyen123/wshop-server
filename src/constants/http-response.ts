@@ -267,4 +267,15 @@ export const HTTP_RESPONSE = {
       code: 10001,
     },
   },
+
+  SIZE_TYPE: {
+    NOT_FOUND: {
+      message: 'Size type not found',
+      code: 11000,
+    },
+    EXISTED_SIZE_TYPE: {
+      message: 'Size type is used in product type',
+      code: 11001,
+    },
+  },
 };
