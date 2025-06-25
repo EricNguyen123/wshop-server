@@ -19,5 +19,6 @@ import { CategoriesEntity } from 'src/entities/categories.entity';
   ],
   controllers: [ProductsController],
   providers: [ProductsService, JwtAuthGuard],
+  exports: [ProductsService],
 })
 export class ProductsModule {}

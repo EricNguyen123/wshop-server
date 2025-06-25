@@ -278,4 +278,15 @@ export const HTTP_RESPONSE = {
       code: 11001,
     },
   },
+
+  PRODUCT_TYPE: {
+    NOT_FOUND: {
+      message: 'Product type not found',
+      code: 12000,
+    },
+    EXISTED_PRODUCT_TYPE: {
+      message: 'Product type is used in product',
+      code: 12001,
+    },
+  },
 };

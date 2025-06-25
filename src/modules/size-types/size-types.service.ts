@@ -118,4 +118,18 @@ export class SizeTypesService {
     await this.sizeTypesRepository.softDelete(id);
     return true;
   }
+
+  async findSizeTypesById(payload: { id: string }) {
+    const { id } = payload;
+    const existedSizeType = await this.sizeTypesRepository.findOneBy({ id });
+    if (!existedSizeType) {
+      throw new NotFoundException({
+        status: HttpStatus.NOT_FOUND,
+        message: HTTP_RESPONSE.SIZE_TYPE.NOT_FOUND.message,
+        code: HTTP_RESPONSE.SIZE_TYPE.NOT_FOUND.code,
+      });
+    }
+
+    return existedSizeType;
+  }
 }

@@ -645,4 +645,21 @@ export class ProductsService {
 
     return existedProduct?.categories;
   }
+
+  async findProductById(payload: { productId: string }) {
+    const { productId } = payload;
+    const label = '[findProductById]';
+    const existedProduct = await this.productRepository.findOneBy({ id: productId });
+    this.logger.debug(`${label} existedProduct -> ${JSON.stringify(existedProduct)}`);
+
+    if (!existedProduct) {
+      throw new NotFoundException({
+        status: HttpStatus.NOT_FOUND,
+        message: HTTP_RESPONSE.PRODUCT.NOT_FOUND.message,
+        code: HTTP_RESPONSE.PRODUCT.NOT_FOUND.code,
+      });
+    }
+
+    return existedProduct;
+  }
 }

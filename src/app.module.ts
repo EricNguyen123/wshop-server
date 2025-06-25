@@ -17,6 +17,7 @@ import { ProductsModule } from './modules/products/products.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { ColorTypesModule } from './modules/color-types/color-types.module';
 import { SizeTypesModule } from './modules/size-types/size-types.module';
+import { ProductTypesModule } from './modules/product-types/product-types.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { SizeTypesModule } from './modules/size-types/size-types.module';
     CategoriesModule,
     ColorTypesModule,
     SizeTypesModule,
+    ProductTypesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

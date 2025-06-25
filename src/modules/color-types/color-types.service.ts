@@ -113,4 +113,18 @@ export class ColorTypesService {
     await this.colorTypesRepository.softDelete(id);
     return true;
   }
+
+  async findColorTypesById(payload: { id: string }) {
+    const { id } = payload;
+    const existedColorType = await this.colorTypesRepository.findOneBy({ id });
+    if (!existedColorType) {
+      throw new NotFoundException({
+        status: HttpStatus.NOT_FOUND,
+        message: HTTP_RESPONSE.COLOR_TYPE.NOT_FOUND.message,
+        code: HTTP_RESPONSE.COLOR_TYPE.NOT_FOUND.code,
+      });
+    }
+
+    return existedColorType;
+  }
 }

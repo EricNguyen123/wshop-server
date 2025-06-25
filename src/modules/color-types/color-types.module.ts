@@ -14,5 +14,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-guards/jwt-auth.guard';
   ],
   controllers: [ColorTypesController],
   providers: [ColorTypesService, JwtAuthGuard],
+  exports: [ColorTypesService],
 })
 export class ColorTypesModule {}

@@ -14,5 +14,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-guards/jwt-auth.guard';
   ],
   controllers: [SizeTypesController],
   providers: [SizeTypesService, JwtAuthGuard],
+  exports: [SizeTypesService],
 })
 export class SizeTypesModule {}
